@@ -538,13 +538,14 @@ erDiagram
 
 ## 7. Catatan Implementasi
 
-Desain di atas telah **diimplementasikan pada kode** (migrasi, model, controller, view, dan test). Berikut perubahan yang dilakukan dibanding implementasi lama:
+Desain di atas telah **diimplementasikan pada kode** (migrasi, model, controller, view, dan test). Berikut perubahan dari implementasi lama ke baru:
 
-| Aspek | Saat Ini | Rancangan Baru |
-|-------|----------|----------------|
+| Aspek | Sebelum | Sesudah (Kini) |
+|-------|---------|----------------|
 | Data pemilik kendaraan | menyatu di `kendaraans` (`nama_pemilik`, `no_hp`) | tabel terpisah **pelanggans** |
 | Merek & tipe | satu kolom `merk_tipe` | dipisah **merk** & **tipe** |
 | Kategori sparepart | tidak ada | tabel **kategoris** |
 | Harga beli / stok minimal | tidak ada | ditambahkan ke **spareparts** |
 | Riwayat pembayaran | hanya status `lunas` | tabel **pembayarans** (metode, kasir, tanggal) |
 | Status servis | `antre, proses, selesai, lunas` | `antre, proses, selesai, batal` + status pelunasan dari pembayarans |
+| Nomor telepon pengguna | tidak ada | ditambahkan kolom `no_telepon` di **users** |
