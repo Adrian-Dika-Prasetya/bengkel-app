@@ -216,6 +216,20 @@ flowchart LR
 
 ## 3. Normalisasi
 
+> **Ringkasan cepat (sat-set):** alur "pecahnya tabel" dari data mentah sampai hasil akhir.
+
+| Tahap | Jumlah Tabel | Tabel yang terbentuk |
+|-------|--------------|----------------------|
+| 0NF (RAW) | 1 | semua data campur jadi satu (pemilik, kendaraan, sparepart, jasa, status) |
+| 1NF | 1 | baris dirapikan — 1 baris = 1 sparepart; data pemilik jadi berulang |
+| 2NF | 3 | **spareparts**, **servises**, **detail_servises** |
+| 3NF | 7 | **pelanggans**, **kendaraans**, **spareparts**, **servises**, **detail_servises**, **pembayarans**, **users** |
+
+> Di rancangan final ditambah **kategoris** (data master kategori sparepart) sehingga menjadi **8 tabel**.
+> Penjelasan detail setiap tahap ada di 3.1–3.5.
+
+---
+
 ### 3.1 Bentuk Tidak Normal (UNF)
 
 Data mentah hasil pencatatan manual bengkel. Terdapat **kelompok berulang** (beberapa sparepart dalam satu
