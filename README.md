@@ -3,6 +3,16 @@
 > **Status dokumen:** Rancangan/desain sistem **versi baru** — *implementasi kode menyusul.*
 > Dokumen ini berisi analisis kebutuhan, DFD, normalisasi, ERD, dan tabel normalisasi sebagai acuan pembangunan ulang aplikasi.
 
+## Daftar Isi
+
+1. [Analisis Sistem](#1-analisis-sistem)
+2. [Data Flow Diagram (DFD)](#2-data-flow-diagram-dfd)
+3. [Normalisasi](#3-normalisasi)
+4. [Entity Relationship Diagram (ERD)](#4-entity-relationship-diagram-erd)
+5. [Tabel Normalisasi (Rancangan Final)](#5-tabel-normalisasi-rancangan-final)
+6. [Ringkasan Relasi](#6-ringkasan-relasi)
+7. [Catatan Implementasi](#7-catatan-implementasi)
+
 ---
 
 ## 1. Analisis Sistem
@@ -208,61 +218,111 @@ flowchart LR
 
 ### 3.1 Bentuk Tidak Normal (UNF)
 
-Data mentah dari pencatatan manual bengkel — masih ada **kelompok berulang** (beberapa sparepart dalam satu servis) dan
-data pemilik/kendaraan ditulis berulang:
+Data mentah hasil pencatatan manual bengkel. Terdapat **kelompok berulang** (beberapa sparepart dalam satu
+transaksi servis) dan data pemilik/kendaraan ditulis berulang setiap kali servis:
+
+| No | Kode Servis | Tanggal | Pemilik | No HP | Alamat | Plat Nomor | Merk | Tipe | Keluhan | Mekanik | Sparepart Terpakai | Biaya Jasa | Total | Status |
+|----|-------------|---------|---------|-------|--------|------------|------|------|---------|---------|--------------------|------------|-------|--------|
+| 1 | SRV-001 | 19-09-2026 | Andi Wijaya | 081234567890 | Jl. Merdeka No.1 | B 1234 ABC | Honda | Vario 150 | Ganti oli & servis rutin | Budi | OLI-001, BUSI-001 | 50.000 | 185.000 | Lunas |
+| 2 | SRV-002 | 20-09-2026 | Andi Wijaya | 081234567890 | Jl. Merdeka No.1 | B 1234 ABC | Honda | Vario 150 | Cek rem | Rudi | BUSI-001 | 35.000 | 60.000 | Lunas |
+
+Contoh rekaman manual (lebih detail):
 
 ```
 SRV-001 | 19-09-2026
-  Pemilik : Andi Wijaya | 081234567890 | Jl. Merdeka No.1
-  Kendaraan : B 1234 ABC | Honda | Vario 150
-  Keluhan : Ganti oli & servis rutin
-  Mekanik : Budi
-  Sparepart : [OLI-001 Oli MPX2 55.000 x2 = 110.000]
-              [BUSI-001 Busi NGK 25.000 x1 = 25.000]
-  Biaya Jasa : 50.000    Total : 185.000    Status : Lunas
+  Pemilik     : Andi Wijaya | 081234567890 | Jl. Merdeka No.1
+  Kendaraan   : B 1234 ABC | Honda | Vario 150
+  Keluhan     : Ganti oli & servis rutin
+  Mekanik     : Budi
+  Sparepart   : [OLI-001  Oli MPX2   55.000 x2 = 110.000]
+                [BUSI-001 Busi NGK   25.000 x1 =  25.000]
+  Biaya Jasa  : 50.000     Total : 185.000     Status : Lunas
 ```
 
 ### 3.2 Bentuk Normal Pertama (1NF)
 
-Menghilangkan kelompok berulang → setiap baris berisi satu data atomik dan **plat nomor + kode sparepart** dijadikan
-kunci gabungan. Setiap atribut bernilai tunggal (mis. `Merk` dan `Tipe` dipisah, bukan `MerkTipe`).
+Menghilangkan **kelompok berulang** → setiap kolom berisi data **atomik** (tidak ada kumpulan sparepart dalam satu
+sel) dan `Merk`/`Tipe` dipisah. Kunci gabungan = **(Kode_Servis, Kode_Barang)**.
 
-| No | Kode_Servis | Tanggal | Nama_Pemilik | No_HP | Alamat | Plat_Nomor | Merk | Tipe | Mekanik | Kode_Barang | Nama_Barang | Harga | Jumlah | Subtotal | Biaya_Jasa | Status |
-|----|-------------|---------|--------------|-------|--------|------------|------|------|---------|-------------|-------------|-------|--------|----------|------------|--------|
-| 1 | SRV-001 | 19-09-2026 | Andi Wijaya | 081234... | Jl. Merdeka | B 1234 ABC | Honda | Vario 150 | Budi | OLI-001 | Oli MPX2 | 55000 | 2 | 110000 | 50000 | Lunas |
-| 1 | SRV-001 | 19-09-2026 | Andi Wijaya | 081234... | Jl. Merdeka | B 1234 ABC | Honda | Vario 150 | Budi | BUSI-001 | Busi NGK | 25000 | 1 | 25000 | 50000 | Lunas |
+| Kode_Servis | Tanggal | Nama_Pemilik | No_HP | Alamat | Plat_Nomor | Merk | Tipe | Mekanik | Biaya_Jasa | Status | Kode_Barang | Nama_Barang | Harga | Jumlah | Subtotal |
+|-------------|---------|--------------|-------|--------|------------|------|------|---------|------------|--------|-------------|-------------|-------|--------|----------|
+| SRV-001 | 19-09-2026 | Andi Wijaya | 081234567890 | Jl. Merdeka No.1 | B 1234 ABC | Honda | Vario 150 | Budi | 50.000 | Lunas | OLI-001 | Oli MPX2 | 55.000 | 2 | 110.000 |
+| SRV-001 | 19-09-2026 | Andi Wijaya | 081234567890 | Jl. Merdeka No.1 | B 1234 ABC | Honda | Vario 150 | Budi | 50.000 | Lunas | BUSI-001 | Busi NGK | 25.000 | 1 | 25.000 |
+| SRV-002 | 20-09-2026 | Andi Wijaya | 081234567890 | Jl. Merdeka No.1 | B 1234 ABC | Honda | Vario 150 | Rudi | 35.000 | Lunas | BUSI-001 | Busi NGK | 25.000 | 1 | 25.000 |
 
-Setelah 1NF terbentuk, kunci kandidat gabungan = `(Kode_Servis, Kode_Barang)`.
+**Kunci kandidat 1NF:** `(Kode_Servis, Kode_Barang)`.
 
 ### 3.3 Bentuk Normal Kedua (2NF)
 
-Menghilangkan **ketergantungan parsial** — atribut yang hanya bergantung pada sebagian kunci dipisah ke tabel sendiri.
+Menghilangkan **ketergantungan parsial** — atribut yang hanya bergantung pada *sebagian* kunci (bukan kunci penuh)
+dipisah ke tabel sendiri:
 
-- `Nama_Barang`, `Harga` → hanya bergantung pada `Kode_Barang` ⇒ dipindah ke tabel **Spareparts**.
-- `Tanggal`, data pemilik/kendaraan, `Mekanik`, `Biaya_Jasa`, `Status` → hanya bergantung pada `Kode_Servis`
-  ⇒ dipindah ke tabel **Servises**.
-- Sisanya (`Kode_Servis`, `Kode_Barang`, `Jumlah`, `Subtotal`) → tabel rincian **Detail_Servises**.
+| Atribut | Bergantung pada | Dipindah ke tabel |
+|---------|-----------------|-------------------|
+| `Nama_Barang`, `Harga` | `Kode_Barang` (bagian kunci saja) | **Spareparts** |
+| `Tanggal`, `Nama_Pemilik`, `No_HP`, `Alamat`, `Plat_Nomor`, `Merk`, `Tipe`, `Mekanik`, `Biaya_Jasa`, `Status` | `Kode_Servis` (bagian kunci saja) | **Servises** |
+| `Jumlah`, `Subtotal` | `(Kode_Servis, Kode_Barang)` (kunci penuh) | **Detail_Servises** |
 
-Hasil 2NF:
+Hasil dekomposisi (contoh baris data):
 
-- **Servises**: `Kode_Servis` PK, `Tanggal`, `Plat_Nomor`, `Mekanik`, `Biaya_Jasa`, `Status`
-- **Spareparts**: `Kode_Barang` PK, `Nama_Barang`, `Harga`
-- **Detail_Servises**: `(Kode_Servis, Kode_Barang)` PK gabungan, `Jumlah`, `Subtotal`
+**Servises** — kunci `Kode_Servis`:
+
+| Kode_Servis (PK) | Tanggal | Plat_Nomor | Mekanik | Biaya_Jasa | Status |
+|------------------|---------|------------|---------|------------|--------|
+| SRV-001 | 19-09-2026 | B 1234 ABC | Budi | 50.000 | Lunas |
+| SRV-002 | 20-09-2026 | B 1234 ABC | Rudi | 35.000 | Lunas |
+
+**Spareparts** — kunci `Kode_Barang`:
+
+| Kode_Barang (PK) | Nama_Barang | Harga |
+|------------------|-------------|-------|
+| OLI-001 | Oli MPX2 | 55.000 |
+| BUSI-001 | Busi NGK | 25.000 |
+
+**Detail_Servises** — kunci gabungan `(Kode_Servis, Kode_Barang)`:
+
+| Kode_Servis (FK) | Kode_Barang (FK) | Jumlah | Subtotal |
+|------------------|------------------|--------|----------|
+| SRV-001 | OLI-001 | 2 | 110.000 |
+| SRV-001 | BUSI-001 | 1 | 25.000 |
+| SRV-002 | BUSI-001 | 1 | 25.000 |
 
 ### 3.4 Bentuk Normal Ketiga (3NF)
 
-Menghilangkan **ketergantungan transitif** — atribut bukan kunci yang saling bergantung dipisah ke tabel sendiri.
+Menghilangkan **ketergantungan transitif** — atribut bukan-kunci yang bergantung pada atribut bukan-kunci lain,
+atau nilai yang seharusnya menjadi data mandiri:
 
-- `Nama_Pemilik`, `No_HP`, `Alamat` bergantung pada `Plat_Nomor` (bukan pada `Kode_Servis`) dan seorang pemilik
-  dapat memiliki lebih dari satu kendaraan ⇒ dipindah ke tabel **Pelanggans**; kendaraan memuat `Plat_Nomor`,
-  `Merk`, `Tipe`, dan `Pelanggan_ID` (FK).
-- `Mekanik` (nama) disimpan sebagai referensi `Mekanik_ID` ke tabel **Users**.
-- Sparepart difungsikan penuh: `Harga_Beli`, `Harga_Jual`, `Stok`, `Stok_Minimal`, dan `Kategori_ID` (FK) ke tabel **Kategoris**.
-- Pembayaran dipisah ke tabel **Pembayarans** agar riwayat pembayaran/angsuran dapat didata.
+| Atribut | Bergantung pada | Dipindah ke tabel |
+|---------|-----------------|-------------------|
+| `Nama_Pemilik`, `No_HP`, `Alamat` | `Plat_Nomor` (bukan `Kode_Servis`); 1 pelanggan bisa punya banyak kendaraan | **Pelanggans** |
+| `Merk`, `Tipe` + `Pelanggan_ID` | `Plat_Nomor` | **Kendaraans** |
+| `Mekanik` (nama) | diganti referensi ID | **Users** (sebagai `mekanik_id` FK di Servises) |
+| `Harga_Beli`, `Harga_Jual`, `Stok`, `Stok_Minimal`, `Kategori_ID` | `Kode_Barang` (lengkapi data barang) | **Kategoris** + **Spareparts** |
+| riwayat pembayaran/angsuran | 1 servis dapat dibayar beberapa kali | **Pembayarans** |
+
+Tabel baru hasil 3NF (contoh baris):
+
+**Pelanggans** — memisahkan pemilik dari kendaraan:
+
+| Pelanggan_ID (PK) | Nama | No_HP | Alamat |
+|-------------------|------|-------|--------|
+| 1 | Andi Wijaya | 081234567890 | Jl. Merdeka No.1 |
+
+**Kendaraans** — kendaraan kini menunjuk pelanggan:
+
+| Kendaraan_ID (PK) | Pelanggan_ID (FK) | Plat_Nomor | Merk | Tipe |
+|-------------------|-------------------|------------|------|------|
+| 1 | 1 | B 1234 ABC | Honda | Vario 150 |
+
+**Kategoris** (baru), **Pembayarans** (baru), serta **Users** lengkap definisi kolomnya ada di
+[bab 5](#5-tabel-normalisasi-rancangan-final).
 
 ### 3.5 Hasil Akhir
 
-Rancangan **sudah memenuhi 3NF**. Seluruh entitas terminal terlihat pada ERD dan tabel normalisasi di bawah.
+Desain **memenuhi 3NF** dan menghasilkan **8 entitas akhir**:
+`users`, `kategoris`, `spareparts`, `pelanggans`, `kendaraans`, `servises`, `detail_servises`, `pembayarans`.
+Lihat relasi antar-entitas pada [ERD (bab 4)](#4-entity-relationship-diagram-erd) dan definisi kolom lengkap
+pada [Tabel Normalisasi (bab 5)](#5-tabel-normalisasi-rancangan-final).
 
 ---
 
