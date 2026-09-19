@@ -1,0 +1,57 @@
+<?php
+
+use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\KendaraanController;
+use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\ServisController;
+use App\Http\Controllers\SparepartController;
+use Illuminate\Support\Facades\Route;
+
+// 1. Redirect Halaman Utama langsung ke Halaman Login
+Route::get('/', function () {
+    return redirect()->route('login');
+});
+
+// 2. Route Dashboard
+Route::get('/dashboard', [DashboardController::class, 'index'])
+    ->middleware(['auth', 'verified'])
+    ->name('dashboard');
+
+// 3. Group Route yang Membutuhkan Login (Auth Middleware)
+Route::middleware('auth')->group(function () {
+    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
+    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+
+    // 4. Data Sparepart: khusus Admin
+    Route::middleware('role:admin')->group(function () {
+        Route::resource('spareparts', SparepartController::class);
+    });
+
+    // 5. Data Kendaraan: Admin & Kasir
+    Route::middleware('role:admin,kasir')->group(function () {
+        Route::resource('kendaraans', KendaraanController::class);
+    });
+
+    // 6. Transaksi Servis: semua role boleh melihat,
+    //    mencatat transaksi khusus Admin & Kasir,
+    //    update status diperbolehkan sesuai peran di controller
+    Route::get('servises', [ServisController::class, 'index'])
+        ->middleware('role:admin,kasir,mekanik')
+        ->name('servises.index');
+    Route::get('servises/create', [ServisController::class, 'create'])
+        ->middleware('role:admin,kasir')
+        ->name('servises.create');
+    Route::post('servises', [ServisController::class, 'store'])
+        ->middleware('role:admin,kasir')
+        ->name('servises.store');
+    Route::get('servises/{servis}', [ServisController::class, 'show'])
+        ->middleware('role:admin,kasir,mekanik')
+        ->name('servises.show');
+    Route::patch('servises/{servis}/status', [ServisController::class, 'updateStatus'])
+        ->middleware('role:admin,kasir,mekanik')
+        ->name('servises.status');
+});
+
+// 7. Import Route Autentikasi Bawaan Breeze (Login, Register, Logout, dll)
+require __DIR__.'/auth.php';
