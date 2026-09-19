@@ -25,7 +25,7 @@
             @endif
 
             <div class="bg-white rounded-lg shadow-md overflow-hidden mb-6">
-                <div class="px-6 py-4 bg-gray-50 flex justify-between items-center">
+                <div class="px-6 py-4 bg-gray-50 flex flex-wrap items-center gap-4">
                     <div>
                         <div class="text-xs text-gray-500 uppercase">Kode Transaksi</div>
                         <div class="font-mono font-bold">{{ $servis->kode_transaksi }}</div>
@@ -35,22 +35,29 @@
                             @case('antre') bg-gray-100 text-gray-700 @break
                             @case('proses') bg-yellow-100 text-yellow-800 @break
                             @case('selesai') bg-blue-100 text-blue-800 @break
-                            @case('lunas') bg-green-100 text-green-800 @break
+                            @case('batal') bg-red-100 text-red-800 @break
                         @endswitch">
                         {{ strtoupper($servis->status) }}
                     </span>
+                    @if($servis->lunas)
+                        <span class="px-2 py-1 text-xs font-semibold rounded bg-green-100 text-green-800">LUNAS</span>
+                    @else
+                        <span class="px-2 py-1 text-xs font-semibold rounded bg-orange-100 text-orange-800">
+                            SISA Rp {{ number_format($servis->total_bayar - $servis->totalDibayar) }}
+                        </span>
+                    @endif
                 </div>
 
                 <div class="px-6 py-4 grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                         <div class="text-xs text-gray-500 uppercase">Kendaraan</div>
                         <div class="font-semibold">{{ $servis->kendaraan->plat_nomor }}</div>
-                        <div class="text-sm text-gray-600">{{ $servis->kendaraan->merk_tipe }}</div>
+                        <div class="text-sm text-gray-600">{{ $servis->kendaraan->merk }} {{ $servis->kendaraan->tipe }}</div>
                     </div>
                     <div>
                         <div class="text-xs text-gray-500 uppercase">Pemilik</div>
-                        <div class="font-semibold">{{ $servis->kendaraan->nama_pemilik }}</div>
-                        <div class="text-sm text-gray-600">{{ $servis->kendaraan->no_hp }}</div>
+                        <div class="font-semibold">{{ $servis->kendaraan->pelanggan->nama ?? '-' }}</div>
+                        <div class="text-sm text-gray-600">{{ $servis->kendaraan->pelanggan->no_hp ?? '-' }}</div>
                     </div>
                     <div>
                         <div class="text-xs text-gray-500 uppercase">Mekanik</div>
@@ -92,13 +99,13 @@
                 Auth::user()->isKasir() ||
                 (Auth::user()->isMekanik() && $servis->mekanik_id === Auth::id())
             )
-                <div class="bg-white p-6 rounded-lg shadow-md">
-                    <h3 class="text-lg font-bold mb-4">Ubah Status</h3>
+                <div class="bg-white p-6 rounded-lg shadow-md mb-6">
+                    <h3 class="text-lg font-bold mb-4">Ubah Status Pengerjaan</h3>
                     <form action="{{ route('servises.status', $servis) }}" method="POST" class="flex items-center gap-4">
                         @csrf
                         @method('PATCH')
                         <select name="status" class="rounded-md border-gray-300 shadow-sm">
-                            @foreach(['antre', 'proses', 'selesai', 'lunas'] as $status)
+                            @foreach(['antre', 'proses', 'selesai', 'batal'] as $status)
                                 @if(Auth::user()->isMekanik() && $status !== 'selesai')
                                     @continue
                                 @endif
@@ -109,6 +116,60 @@
                             Simpan Status
                         </button>
                     </form>
+                </div>
+            @endif
+
+            @if(Auth::user()->isAdmin() || Auth::user()->isKasir())
+                <div class="bg-white p-6 rounded-lg shadow-md">
+                    <h3 class="text-lg font-bold mb-1">Pembayaran</h3>
+                    <p class="text-sm text-gray-500 mb-4">
+                        Dibayar Rp {{ number_format($servis->totalDibayar) }} dari Rp {{ number_format($servis->total_bayar) }}
+                        (Sisa Rp {{ number_format($servis->total_bayar - $servis->totalDibayar) }})
+                    </p>
+
+                    @if($servis->lunas)
+                        <div class="p-4 bg-green-50 border border-green-200 text-green-700 rounded mb-4">
+                            Tagihan sudah lunas.
+                        </div>
+                    @elseif($servis->status === 'batal')
+                        <div class="p-4 bg-gray-50 border border-gray-200 text-gray-600 rounded mb-4">
+                            Servis dibatalkan, tidak perlu pembayaran.
+                        </div>
+                    @else
+                        <form action="{{ route('servises.pembayaran', $servis) }}" method="POST" class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                            @csrf
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">Jumlah Bayar (Rp)</label>
+                                <input type="number" name="jumlah_bayar" required min="1" max="{{ $servis->total_bayar - $servis->totalDibayar }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">Metode</label>
+                                <select name="metode" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                                    @foreach(['tunai', 'transfer', 'qris'] as $metode)
+                                        <option value="{{ $metode }}">{{ strtoupper($metode) }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div class="flex items-end">
+                                <button type="submit" class="bg-green-600 text-white px-4 py-2 rounded shadow text-sm hover:bg-green-700">
+                                    Catat Pembayaran
+                                </button>
+                            </div>
+                        </form>
+                    @endif
+
+                    @forelse($servis->pembayarans as $bayar)
+                        <div class="flex justify-between items-center border-b border-gray-100 py-3">
+                            <div>
+                                <div class="font-semibold">Rp {{ number_format($bayar->jumlah_bayar) }}</div>
+                                <div class="text-sm text-gray-500">
+                                    {{ $bayar->dibayar_pada->format('d M Y H:i') }} · {{ strtoupper($bayar->metode) }} · {{ $bayar->kasir->name ?? '-' }}
+                                </div>
+                            </div>
+                        </div>
+                    @empty
+                        <p class="text-gray-500">Belum ada pembayaran.</p>
+                    @endforelse
                 </div>
             @endif
         </div>

@@ -91,7 +91,7 @@ class RoleAccessTest extends TestCase
         $this->assertDatabaseHas('servises', ['id' => $servis->id, 'status' => 'selesai']);
     }
 
-    public function test_mekanik_cannot_set_status_lunas(): void
+    public function test_mekanik_cannot_set_status_batal(): void
     {
         $mekanik = User::factory()->create();
         $servis = Servis::factory()->create([
@@ -100,7 +100,7 @@ class RoleAccessTest extends TestCase
         ]);
 
         $this->actingAs($mekanik)
-            ->patch(route('servises.status', $servis), ['status' => 'lunas'])
+            ->patch(route('servises.status', $servis), ['status' => 'batal'])
             ->assertForbidden();
 
         $this->assertDatabaseHas('servises', ['id' => $servis->id, 'status' => 'proses']);
@@ -116,15 +116,62 @@ class RoleAccessTest extends TestCase
             ->assertForbidden();
     }
 
-    public function test_kasir_can_set_status_lunas(): void
+    public function test_kasir_can_set_status_batal(): void
     {
         $servis = Servis::factory()->create(['status' => 'selesai']);
 
         $this->actingAs(User::factory()->kasir()->create())
-            ->patch(route('servises.status', $servis), ['status' => 'lunas'])
+            ->patch(route('servises.status', $servis), ['status' => 'batal'])
             ->assertRedirect();
 
-        $this->assertDatabaseHas('servises', ['id' => $servis->id, 'status' => 'lunas']);
+        $this->assertDatabaseHas('servises', ['id' => $servis->id, 'status' => 'batal']);
+    }
+
+    public function test_kasir_can_record_pembayaran(): void
+    {
+        $servis = Servis::factory()->create(['status' => 'selesai', 'total_bayar' => 100000]);
+        $kasir = User::factory()->kasir()->create();
+
+        $this->actingAs($kasir)
+            ->post(route('servises.pembayaran', $servis), [
+                'jumlah_bayar' => 100000,
+                'metode' => 'tunai',
+            ])
+            ->assertRedirect();
+
+        $this->assertDatabaseHas('pembayarans', [
+            'servis_id' => $servis->id,
+            'kasir_id' => $kasir->id,
+            'jumlah_bayar' => 100000,
+        ]);
+
+        $this->assertTrue($servis->fresh()->lunas);
+    }
+
+    public function test_mekanik_cannot_record_pembayaran(): void
+    {
+        $servis = Servis::factory()->create(['status' => 'selesai']);
+
+        $this->actingAs(User::factory()->create())
+            ->post(route('servises.pembayaran', $servis), [
+                'jumlah_bayar' => 50000,
+                'metode' => 'tunai',
+            ])
+            ->assertForbidden();
+    }
+
+    public function test_pembayaran_tidak_boleh_melebihi_sisa_tagihan(): void
+    {
+        $servis = Servis::factory()->create(['total_bayar' => 100000]);
+
+        $this->actingAs(User::factory()->kasir()->create())
+            ->post(route('servises.pembayaran', $servis), [
+                'jumlah_bayar' => 150000,
+                'metode' => 'tunai',
+            ])
+            ->assertSessionHasErrors('jumlah_bayar');
+
+        $this->assertDatabaseCount('pembayarans', 0);
     }
 
     public function test_guest_cannot_access_dashboard(): void

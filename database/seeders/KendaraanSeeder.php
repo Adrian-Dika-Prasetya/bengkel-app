@@ -3,31 +3,28 @@
 namespace Database\Seeders;
 
 use App\Models\Kendaraan;
+use App\Models\Pelanggan;
 use Illuminate\Database\Seeder;
 
 class KendaraanSeeder extends Seeder
 {
     public function run(): void
     {
-        Kendaraan::create([
-            'plat_nomor' => 'B 1234 ABC',
-            'nama_pemilik' => 'Andi Wijaya',
-            'no_hp' => '081234567890',
-            'merk_tipe' => 'Honda Vario 150',
-        ]);
+        $data = [
+            ['B 1234 ABC', 'Honda', 'Vario 150'],
+            ['B 5678 DEF', 'Yamaha', 'NMAX'],
+            ['B 9012 GHI', 'Toyota', 'Avanza'],
+        ];
 
-        Kendaraan::create([
-            'plat_nomor' => 'B 5678 DEF',
-            'nama_pemilik' => 'Siti Rahmawati',
-            'no_hp' => '081298765432',
-            'merk_tipe' => 'Yamaha NMAX',
-        ]);
+        $pelanggans = Pelanggan::orderBy('id')->get();
 
-        Kendaraan::create([
-            'plat_nomor' => 'B 9012 GHI',
-            'nama_pemilik' => 'Bambang Susilo',
-            'no_hp' => '081345678912',
-            'merk_tipe' => 'Toyota Avanza',
-        ]);
+        foreach ($data as $index => [$plat, $merk, $tipe]) {
+            $pelanggan = $pelanggans->get($index) ?? $pelanggans->last();
+
+            Kendaraan::firstOrCreate(
+                ['plat_nomor' => $plat],
+                ['pelanggan_id' => $pelanggan->id, 'merk' => $merk, 'tipe' => $tipe]
+            );
+        }
     }
 }

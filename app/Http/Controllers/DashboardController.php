@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\Kendaraan;
+use App\Models\Pelanggan;
+use App\Models\Pembayaran;
 use App\Models\Servis;
 use App\Models\Sparepart;
 use Illuminate\Http\Request;
@@ -15,26 +17,45 @@ class DashboardController extends Controller
 
         if ($user->isMekanik()) {
             return view('dashboard', [
-                'tugasDikerjakan' => Servis::whereBelongsTo($user, 'mekanik')->whereIn('status', ['antre', 'proses'])->latest()->get(),
-                'tugasSelesai' => Servis::whereBelongsTo($user, 'mekanik')->where('status', 'selesai')->count(),
+                'tugasDikerjakan' => Servis::whereBelongsTo($user, 'mekanik')
+                    ->whereIn('status', ['antre', 'proses'])
+                    ->with('kendaraan')
+                    ->latest()
+                    ->get(),
+                'tugasSelesai' => Servis::whereBelongsTo($user, 'mekanik')
+                    ->where('status', 'selesai')
+                    ->count(),
             ]);
         }
 
         if ($user->isKasir()) {
             return view('dashboard', [
                 'totalTransaksi' => Servis::count(),
-                'totalPendapatan' => (int) Servis::where('status', 'lunas')->sum('total_bayar'),
+                'totalPendapatan' => (int) Pembayaran::sum('jumlah_bayar'),
                 'jalanSekarang' => Servis::whereIn('status', ['antre', 'proses'])->count(),
-                'transaksiTerbaru' => Servis::with(['kendaraan', 'mekanik'])->latest()->limit(5)->get(),
+                'tagihanBelumLunas' => $this->tagihanBelumLunas(),
+                'transaksiTerbaru' => Servis::with(['kendaraan.pelanggan', 'mekanik'])->latest()->limit(5)->get(),
             ]);
         }
 
         return view('dashboard', [
             'totalSparepart' => Sparepart::count(),
             'totalKendaraan' => Kendaraan::count(),
+            'totalPelanggan' => Pelanggan::count(),
             'totalTransaksi' => Servis::count(),
-            'totalPendapatan' => (int) Servis::where('status', 'lunas')->sum('total_bayar'),
-            'transaksiTerbaru' => Servis::with(['kendaraan', 'mekanik'])->latest()->limit(5)->get(),
+            'totalPendapatan' => (int) Pembayaran::sum('jumlah_bayar'),
+            'stokMenipis' => Sparepart::whereColumn('stok', '<=', 'stok_minimal')->count(),
+            'tagihanBelumLunas' => $this->tagihanBelumLunas(),
+            'transaksiTerbaru' => Servis::with(['kendaraan.pelanggan', 'mekanik'])->latest()->limit(5)->get(),
         ]);
+    }
+
+    private function tagihanBelumLunas(): int
+    {
+        return (int) Servis::where('total_bayar', '>', 0)
+            ->whereRaw(
+                'COALESCE((SELECT SUM(jumlah_bayar) FROM pembayarans WHERE pembayarans.servis_id = servises.id), 0) < servises.total_bayar'
+            )
+            ->count();
     }
 }

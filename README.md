@@ -1,7 +1,7 @@
 # Sistem Informasi Bengkel (Rancangan Ulang)
 
-> **Status dokumen:** Rancangan/desain sistem **versi baru** — *implementasi kode menyusul.*
-> Dokumen ini berisi analisis kebutuhan, DFD, normalisasi, ERD, dan tabel normalisasi sebagai acuan pembangunan ulang aplikasi.
+> **Status dokumen:** Rancangan/desain sistem **versi baru** — *implementasi kode sudah mengikuti desain ini.*
+> Dokumen berisi analisis kebutuhan, DFD, normalisasi, ERD, dan tabel normalisasi sebagai acuan implementasi aplikasi.
 
 ## Daftar Isi
 
@@ -538,7 +538,7 @@ erDiagram
 
 ## 7. Catatan Implementasi
 
-Desain di atas adalah **target** pembangunan ulang. Perbedaan utama dari implementasi saat ini:
+Desain di atas telah **diimplementasikan pada kode** (migrasi, model, controller, view, dan test). Berikut perubahan yang dilakukan dibanding implementasi lama:
 
 | Aspek | Saat Ini | Rancangan Baru |
 |-------|----------|----------------|

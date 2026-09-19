@@ -24,16 +24,33 @@
                         <input type="text" name="kode_barang" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
                     </div>
                     <div>
+                        <label class="block text-sm font-medium text-gray-700">Kategori</label>
+                        <select name="kategori_id" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                            <option value="">-- Tanpa Kategori --</option>
+                            @foreach($kategoris as $k)
+                                <option value="{{ $k->id }}">{{ $k->nama }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div>
                         <label class="block text-sm font-medium text-gray-700">Nama Barang</label>
                         <input type="text" name="nama_barang" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-gray-700">Stok</label>
-                        <input type="number" name="stok" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                        <label class="block text-sm font-medium text-gray-700">Harga Beli (Rp)</label>
+                        <input type="number" name="harga_beli" required min="0" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700">Harga Jual (Rp)</label>
-                        <input type="number" name="harga_jual" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                        <input type="number" name="harga_jual" required min="0" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Stok</label>
+                        <input type="number" name="stok" required min="0" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Stok Minimal</label>
+                        <input type="number" name="stok_minimal" required min="0" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
                     </div>
                     <div class="md:col-span-4">
                         <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded shadow hover:bg-blue-700">
@@ -49,9 +66,12 @@
                     <thead class="bg-gray-50">
                         <tr>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Kode</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Kategori</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Nama Barang</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Harga Beli</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Harga Jual</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Stok</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Harga</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Stok Min</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Aksi</th>
                         </tr>
                     </thead>
@@ -59,9 +79,16 @@
                         @forelse($spareparts as $item)
                             <tr>
                                 <td class="px-6 py-4 whitespace-nowrap">{{ $item->kode_barang }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap">{{ $item->kategori->nama ?? '-' }}</td>
                                 <td class="px-6 py-4 whitespace-nowrap">{{ $item->nama_barang }}</td>
-                                <td class="px-6 py-4 whitespace-nowrap">{{ $item->stok }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap">Rp {{ number_format($item->harga_beli) }}</td>
                                 <td class="px-6 py-4 whitespace-nowrap">Rp {{ number_format($item->harga_jual) }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span @class(['text-red-600 font-bold' => $item->stok <= $item->stok_minimal])>
+                                        {{ $item->stok }}
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">{{ $item->stok_minimal }}</td>
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <form action="{{ route('spareparts.destroy', $item->id) }}" method="POST" onsubmit="return confirm('Yakin hapus data ini?')">
                                         @csrf
@@ -72,7 +99,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="5" class="px-6 py-4 text-center text-gray-500">Belum ada data sparepart.</td>
+                                <td colspan="8" class="px-6 py-4 text-center text-gray-500">Belum ada data sparepart.</td>
                             </tr>
                         @endforelse
                     </tbody>

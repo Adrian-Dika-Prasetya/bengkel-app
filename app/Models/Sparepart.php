@@ -11,10 +11,19 @@ class Sparepart extends Model
 
     protected $fillable = [
         'kode_barang',
+        'kategori_id',
         'nama_barang',
-        'stok',
+        'harga_beli',
         'harga_jual',
+        'stok',
+        'stok_minimal',
     ];
+
+    // Relasi ke kategori
+    public function kategori()
+    {
+        return $this->belongsTo(Kategori::class);
+    }
 
     // Relasi ke detail servis
     public function detailServises()

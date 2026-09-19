@@ -8,18 +8,15 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('kendaraans', function (Blueprint $table) {
+        Schema::create('kategoris', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('pelanggan_id')->constrained('pelanggans')->cascadeOnDelete();
-            $table->string('plat_nomor')->unique();
-            $table->string('merk');
-            $table->string('tipe');
+            $table->string('nama');
             $table->timestamps();
         });
     }
 
     public function down(): void
     {
-        Schema::dropIfExists('kendaraans');
+        Schema::dropIfExists('kategoris');
     }
 };

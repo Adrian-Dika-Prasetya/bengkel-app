@@ -16,7 +16,7 @@ class ServisController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Servis::with(['kendaraan', 'mekanik']);
+        $query = Servis::with(['kendaraan.pelanggan', 'mekanik', 'pembayarans']);
 
         if ($request->user()->isMekanik()) {
             $query->whereBelongsTo($request->user(), 'mekanik');
@@ -113,14 +113,14 @@ class ServisController extends Controller
 
     public function show(Request $request, Servis $servis)
     {
-        $servis->load(['kendaraan', 'mekanik', 'detailServises.sparepart']);
+        $servis->load(['kendaraan.pelanggan', 'mekanik', 'detailServises.sparepart', 'pembayarans.kasir']);
 
         return view('servises.show', compact('servis'));
     }
 
     public function updateStatus(Request $request, Servis $servis)
     {
-        $allowedStatuses = ['antre', 'proses', 'selesai', 'lunas'];
+        $allowedStatuses = ['antre', 'proses', 'selesai', 'batal'];
 
         $request->validate([
             'status' => ['required', 'in:'.implode(',', $allowedStatuses)],

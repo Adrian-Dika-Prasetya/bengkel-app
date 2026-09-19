@@ -23,7 +23,7 @@ class ServisFactory extends Factory
             'keluhan' => fake()->sentence(),
             'biaya_jasa' => fake()->numberBetween(25000, 150000),
             'total_bayar' => fn (array $attributes) => $attributes['biaya_jasa'],
-            'status' => fake()->randomElement(['antre', 'proses', 'selesai', 'lunas']),
+            'status' => fake()->randomElement(['antre', 'proses', 'selesai']),
         ];
     }
 }

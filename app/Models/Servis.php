@@ -28,4 +28,21 @@ class Servis extends Model
     {
         return $this->hasMany(DetailServis::class);
     }
+
+    public function pembayarans()
+    {
+        return $this->hasMany(Pembayaran::class);
+    }
+
+    // Total uang yang sudah dibayar pelanggan
+    public function getTotalDibayarAttribute(): int
+    {
+        return (int) $this->pembayarans()->sum('jumlah_bayar');
+    }
+
+    // Status pelunasan dihitung dari total pembayaran, bukan kolom status
+    public function getLunasAttribute(): bool
+    {
+        return $this->total_bayar > 0 && $this->totalDibayar >= $this->total_bayar;
+    }
 }

@@ -3,6 +3,7 @@
 namespace Database\Factories;
 
 use App\Models\Kendaraan;
+use App\Models\Pelanggan;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -13,10 +14,10 @@ class KendaraanFactory extends Factory
     public function definition(): array
     {
         return [
+            'pelanggan_id' => Pelanggan::factory(),
             'plat_nomor' => fake()->unique()->regexify('[A-Z] [0-9]{4} [A-Z]{1,3}'),
-            'nama_pemilik' => fake()->name(),
-            'no_hp' => '08'.fake()->numerify('#########'),
-            'merk_tipe' => fake()->randomElement(['Honda Vario 150', 'Yamaha NMAX', 'Toyota Avanza', 'Suzuki Satria']),
+            'merk' => fake()->randomElement(['Honda', 'Yamaha', 'Toyota', 'Suzuki']),
+            'tipe' => fake()->randomElement(['Vario 150', 'NMAX', 'Avanza', 'Satria FU']),
         ];
     }
 }

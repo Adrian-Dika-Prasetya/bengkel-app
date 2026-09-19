@@ -31,7 +31,7 @@
                     @forelse($tugasDikerjakan as $item)
                         <div class="flex justify-between items-center border-b border-gray-100 py-3">
                             <div>
-                                <div class="font-semibold">{{ $item->kendaraan->plat_nomor }} - {{ $item->kendaraan->merk_tipe }}</div>
+                                <div class="font-semibold">{{ $item->kendaraan->plat_nomor }} - {{ $item->kendaraan->merk }} {{ $item->kendaraan->tipe }}</div>
                                 <div class="text-sm text-gray-500">{{ $item->keluhan }}</div>
                             </div>
                             <a href="{{ route('servises.show', $item) }}" class="text-blue-600 text-sm hover:underline">Detail</a>
@@ -41,18 +41,22 @@
                     @endforelse
                 </div>
             @elseif(Auth::user()->isKasir())
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
                     <div class="rounded-lg bg-blue-50 p-4">
                         <div class="text-sm text-blue-700 font-medium">Total Transaksi</div>
                         <div class="text-3xl font-bold text-blue-800">{{ $totalTransaksi }}</div>
                     </div>
                     <div class="rounded-lg bg-green-50 p-4">
-                        <div class="text-sm text-green-700 font-medium">Pendapatan (Lunas)</div>
+                        <div class="text-sm text-green-700 font-medium">Pendapatan (Terkumpul)</div>
                         <div class="text-3xl font-bold text-green-800">Rp {{ number_format($totalPendapatan) }}</div>
                     </div>
                     <div class="rounded-lg bg-yellow-50 p-4">
                         <div class="text-sm text-yellow-700 font-medium">Servis Berjalan</div>
                         <div class="text-3xl font-bold text-yellow-800">{{ $jalanSekarang }}</div>
+                    </div>
+                    <div class="rounded-lg bg-orange-50 p-4">
+                        <div class="text-sm text-orange-700 font-medium">Tagihan Belum Lunas</div>
+                        <div class="text-3xl font-bold text-orange-800">{{ $tagihanBelumLunas }}</div>
                     </div>
                 </div>
 
@@ -68,7 +72,7 @@
                         <div class="flex justify-between items-center border-b border-gray-100 py-3">
                             <div>
                                 <div class="font-semibold">{{ $item->kode_transaksi }}</div>
-                                <div class="text-sm text-gray-500">{{ $item->kendaraan->plat_nomor }} - {{ $item->mekanik->name ?? '-' }} - {{ strtoupper($item->status) }}</div>
+                                <div class="text-sm text-gray-500">{{ $item->kendaraan->plat_nomor }} - {{ $item->kendaraan->pelanggan->nama ?? '-' }} - {{ strtoupper($item->status) }}</div>
                             </div>
                             <span class="font-bold">Rp {{ number_format($item->total_bayar) }}</span>
                         </div>
@@ -86,13 +90,25 @@
                         <div class="text-sm text-indigo-700 font-medium">Total Kendaraan</div>
                         <div class="text-3xl font-bold text-indigo-800">{{ $totalKendaraan }}</div>
                     </div>
+                    <div class="rounded-lg bg-teal-50 p-4">
+                        <div class="text-sm text-teal-700 font-medium">Total Pelanggan</div>
+                        <div class="text-3xl font-bold text-teal-800">{{ $totalPelanggan }}</div>
+                    </div>
                     <div class="rounded-lg bg-yellow-50 p-4">
                         <div class="text-sm text-yellow-700 font-medium">Total Transaksi</div>
                         <div class="text-3xl font-bold text-yellow-800">{{ $totalTransaksi }}</div>
                     </div>
                     <div class="rounded-lg bg-green-50 p-4">
-                        <div class="text-sm text-green-700 font-medium">Pendapatan (Lunas)</div>
+                        <div class="text-sm text-green-700 font-medium">Pendapatan (Terkumpul)</div>
                         <div class="text-3xl font-bold text-green-800">Rp {{ number_format($totalPendapatan) }}</div>
+                    </div>
+                    <div class="rounded-lg bg-red-50 p-4">
+                        <div class="text-sm text-red-700 font-medium">Stok Menipis</div>
+                        <div class="text-3xl font-bold text-red-800">{{ $stokMenipis }}</div>
+                    </div>
+                    <div class="rounded-lg bg-orange-50 p-4">
+                        <div class="text-sm text-orange-700 font-medium">Tagihan Belum Lunas</div>
+                        <div class="text-3xl font-bold text-orange-800">{{ $tagihanBelumLunas }}</div>
                     </div>
                 </div>
 
@@ -102,7 +118,7 @@
                         <div class="flex justify-between items-center border-b border-gray-100 py-3">
                             <div>
                                 <div class="font-semibold">{{ $item->kode_transaksi }}</div>
-                                <div class="text-sm text-gray-500">{{ $item->kendaraan->plat_nomor }} - {{ $item->mekanik->name ?? '-' }} - {{ strtoupper($item->status) }}</div>
+                                <div class="text-sm text-gray-500">{{ $item->kendaraan->plat_nomor }} - {{ $item->kendaraan->pelanggan->nama ?? '-' }} - {{ strtoupper($item->status) }}</div>
                             </div>
                             <span class="font-bold">Rp {{ number_format($item->total_bayar) }}</span>
                         </div>

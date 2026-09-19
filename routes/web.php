@@ -2,6 +2,8 @@
 
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\KendaraanController;
+use App\Http\Controllers\PelangganController;
+use App\Http\Controllers\PembayaranController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ServisController;
 use App\Http\Controllers\SparepartController;
@@ -28,8 +30,10 @@ Route::middleware('auth')->group(function () {
         Route::resource('spareparts', SparepartController::class);
     });
 
-    // 5. Data Kendaraan: Admin & Kasir
+    // 5. Data Pelanggan & Kendaraan: Admin & Kasir
     Route::middleware('role:admin,kasir')->group(function () {
+        Route::post('pelanggans', [PelangganController::class, 'store'])->name('pelanggans.store');
+        Route::delete('pelanggans/{pelanggan}', [PelangganController::class, 'destroy'])->name('pelanggans.destroy');
         Route::resource('kendaraans', KendaraanController::class);
     });
 
@@ -51,6 +55,9 @@ Route::middleware('auth')->group(function () {
     Route::patch('servises/{servis}/status', [ServisController::class, 'updateStatus'])
         ->middleware('role:admin,kasir,mekanik')
         ->name('servises.status');
+    Route::post('servises/{servis}/pembayaran', [PembayaranController::class, 'store'])
+        ->middleware('role:admin,kasir')
+        ->name('servises.pembayaran');
 });
 
 // 7. Import Route Autentikasi Bawaan Breeze (Login, Register, Logout, dll)

@@ -11,9 +11,12 @@ return new class extends Migration
         Schema::create('spareparts', function (Blueprint $table) {
             $table->id();
             $table->string('kode_barang')->unique();
+            $table->foreignId('kategori_id')->nullable()->constrained('kategoris')->nullOnDelete();
             $table->string('nama_barang');
-            $table->integer('stok');
-            $table->decimal('harga_jual', 12, 2);
+            $table->decimal('harga_beli', 12, 2)->default(0);
+            $table->decimal('harga_jual', 12, 2)->default(0);
+            $table->integer('stok')->default(0);
+            $table->integer('stok_minimal')->default(0);
             $table->timestamps();
         });
     }

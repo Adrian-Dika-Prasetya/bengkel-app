@@ -10,11 +10,17 @@ class Kendaraan extends Model
     use HasFactory;
 
     protected $fillable = [
+        'pelanggan_id',
         'plat_nomor',
-        'nama_pemilik',
-        'no_hp',
-        'merk_tipe',
+        'merk',
+        'tipe',
     ];
+
+    // Relasi: 1 Kendaraan dimiliki 1 Pelanggan
+    public function pelanggan()
+    {
+        return $this->belongsTo(Pelanggan::class);
+    }
 
     // Relasi: 1 Kendaraan bisa punya banyak Riwayat Servis
     public function servises()

@@ -18,7 +18,7 @@
                             <select name="kendaraan_id" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
                                 <option value="">-- Pilih Kendaraan --</option>
                                 @foreach($kendaraans as $k)
-                                    <option value="{{ $k->id }}">{{ $k->plat_nomor }} - {{ $k->nama_pemilik }} ({{ $k->merk_tipe }})</option>
+                                    <option value="{{ $k->id }}">{{ $k->plat_nomor }} - {{ $k->pelanggan->nama ?? '-' }} ({{ $k->merk }} {{ $k->tipe }})</option>
                                 @endforeach
                             </select>
                         </div>

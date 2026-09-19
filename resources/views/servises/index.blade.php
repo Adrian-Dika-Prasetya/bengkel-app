@@ -36,6 +36,7 @@
                             <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Biaya Jasa</th>
                             <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Total Bayar</th>
                             <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Pembayaran</th>
                             <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Aksi</th>
                         </tr>
                     </thead>
@@ -45,7 +46,7 @@
                                 <td class="px-4 py-4 font-mono text-sm">{{ $item->kode_transaksi }}</td>
                                 <td class="px-4 py-4">
                                     <div class="font-bold">{{ $item->kendaraan->plat_nomor }}</div>
-                                    <div class="text-xs text-gray-500">{{ $item->kendaraan->nama_pemilik }}</div>
+                                    <div class="text-xs text-gray-500">{{ $item->kendaraan->pelanggan->nama ?? '-' }}</div>
                                 </td>
                                 <td class="px-4 py-4 text-sm">{{ $item->mekanik->name ?? '-' }}</td>
                                 <td class="px-4 py-4 text-sm">Rp {{ number_format($item->biaya_jasa) }}</td>
@@ -56,10 +57,19 @@
                                             @case('antre') bg-gray-100 text-gray-700 @break
                                             @case('proses') bg-yellow-100 text-yellow-800 @break
                                             @case('selesai') bg-blue-100 text-blue-800 @break
-                                            @case('lunas') bg-green-100 text-green-800 @break
+                                            @case('batal') bg-red-100 text-red-800 @break
                                         @endswitch">
                                         {{ strtoupper($item->status) }}
                                     </span>
+                                </td>
+                                <td class="px-4 py-4">
+                                    @if($item->lunas)
+                                        <span class="px-2 py-1 text-xs font-semibold rounded bg-green-100 text-green-800">LUNAS</span>
+                                    @else
+                                        <span class="px-2 py-1 text-xs font-semibold rounded bg-orange-100 text-orange-800">
+                                            SISA Rp {{ number_format($item->total_bayar - $item->totalDibayar) }}
+                                        </span>
+                                    @endif
                                 </td>
                                 <td class="px-4 py-4">
                                     <div class="flex items-center gap-2">
@@ -73,7 +83,7 @@
                                                 @csrf
                                                 @method('PATCH')
                                                 <select name="status" onchange="this.form.submit()" class="text-xs rounded-md border-gray-300 shadow-sm">
-                                                    @foreach(['antre', 'proses', 'selesai', 'lunas'] as $status)
+                                                    @foreach(['antre', 'proses', 'selesai', 'batal'] as $status)
                                                         @if(Auth::user()->isMekanik() && $status !== 'selesai')
                                                             @continue
                                                         @endif
@@ -87,7 +97,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="7" class="px-4 py-4 text-center text-gray-500">Belum ada transaksi servis.</td>
+                                <td colspan="8" class="px-4 py-4 text-center text-gray-500">Belum ada transaksi servis.</td>
                             </tr>
                         @endforelse
                     </tbody>
