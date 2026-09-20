@@ -1,6 +1,6 @@
-<x-guest-layout>
-    <div class="flex min-h-screen flex-col items-center bg-slate-900 px-4 pt-6 sm:justify-center sm:pt-0">
-        <div class="grid w-full max-w-4xl overflow-hidden rounded-2xl bg-slate-800 shadow-2xl ring-1 ring-slate-700 lg:grid-cols-2">
+<x-guest-layout :panel="false">
+    <div class="w-full px-4 sm:px-6">
+        <div class="mx-auto grid max-w-4xl overflow-hidden rounded-2xl bg-slate-800 shadow-2xl ring-1 ring-slate-700 lg:grid-cols-2">
             <!-- Panel Brand -->
             <div class="relative hidden flex-col justify-between bg-gradient-to-br from-orange-500 to-orange-600 p-10 lg:flex">
                 <div>
