@@ -220,7 +220,7 @@ flowchart LR
 
 | Tahap | Jumlah Tabel | Tabel yang terbentuk |
 |-------|--------------|----------------------|
-| 0NF (RAW) | 1 | satu relasi berisi semua kolom (pemilik, kendaraan, sparepart, jasa, status) |
+| 0NF (RAW) | 1 | catatan mentah kasir — semua hal dicampur (pemilik, kendaraan, sparepart, jasa, status) |
 | 1NF | 1 | seluruh kolom atomik — satu nilai, tanpa kelompok berulang |
 | 2NF | 3 | **spareparts**, **servises**, **detail_servises** |
 | 3NF | 8 | **pelanggans**, **kendaraans**, **kategoris**, **users**, **pembayarans**, **spareparts**, **servises**, **detail_servises** |
@@ -232,8 +232,21 @@ flowchart LR
 
 ### 3.1 Satu Tabel Awal (UNF)
 
-Normalisasi dimulai dari **satu relasi** (R) yang berisi semua atribut (kolom) yang dibutuhkan aplikasi, digabung
-menjadi satu tabel — atribut `R`:
+Sebelum sistem dibuat, kasir/admin mencatat servis **secara manual di buku** — bentuknya catatan mentah
+(**UNF**), bukan tabel:
+
+```
+SRV-001 | 19-09-2026
+  Pemilik     : Andi Wijaya | 081234567890 | Jl. Merdeka No.1
+  Kendaraan   : B 1234 ABC | Honda | Vario 150
+  Keluhan     : Ganti oli & servis rutin
+  Mekanik     : Budi
+  Sparepart   : [OLI-001  Oli MPX2   55.000 x2 = 110.000]  (kategori: Oli & Pelumas)
+                [BUSI-001 Busi NGK   25.000 x1 =  25.000]  (kategori: Busi & Pengapian)
+  Biaya Jasa  : 50.000     Total : 185.000     Status : Lunas
+```
+
+Dari catatan mentah semacam itu, seluruh kolom yang dibutuhkan aplikasi diabstraksi menjadi **satu relasi** (R):
 
 | Kolom |
 |-------|
@@ -255,9 +268,10 @@ menjadi satu tabel — atribut `R`:
 | Biaya_Jasa |
 | Status_Pembayaran |
 
-> Seluruh atribut sudah **atomik** (satu nilai, tidak ada kelompok berulang), sehingga secara definisi R sudah
-> memenuhi **1NF**. Anomali yang tersisa justru berada di tingkat 2NF dan 3NF. Proses menurun berikut **tidak
-> membutuhkan data contoh** — murni berbasis ketergantungan fungsional.
+> Catatan mentah di atas memiliki kelompok berulang (beberapa sparepart dalam satu transaksi) dan data pemilik
+> ditulis berulang setiap servis — itulah ciri **UNF/0NF**. Atribut `R` di atas diasumsikan sudah **atomik**
+> (1NF); anomali yang dibahas selanjutnya berada di tingkat 2NF dan 3NF, sehingga proses menurun berikut cukup
+> berbasis ketergantungan fungsional (FD) tanpa menampilkan baris data.
 
 ### 3.2 Ketergantungan Fungsional (FD) dan Kunci Kandidat
 
