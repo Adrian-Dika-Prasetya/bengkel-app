@@ -7,23 +7,43 @@
 
 1. [Analisis Sistem](#1-analisis-sistem)
 2. [Data Flow Diagram (DFD)](#2-data-flow-diagram-dfd)
-3. [Normalisasi](#3-normalisasi)
-4. [Entity Relationship Diagram (ERD)](#4-entity-relationship-diagram-erd)
-5. [Tabel Normalisasi (Rancangan Final)](#5-tabel-normalisasi-rancangan-final)
-6. [Ringkasan Relasi](#6-ringkasan-relasi)
-7. [Catatan Implementasi](#7-catatan-implementasi)
+3. [Flowchart Proses Utama](#3-flowchart-proses-utama)
+4. [Normalisasi](#4-normalisasi)
+5. [Entity Relationship Diagram (ERD)](#5-entity-relationship-diagram-erd)
+6. [Tabel Normalisasi (Rancangan Final)](#6-tabel-normalisasi-rancangan-final)
+7. [Ringkasan Relasi](#7-ringkasan-relasi)
+8. [Catatan Implementasi](#8-catatan-implementasi)
 
 ---
 
 ## 1. Analisis Sistem
 
-### 1.1 Gambaran Umum
+### 1.1 Analisis Masalah
+
+**Kondisi saat ini (sebelum sistem dibangun),** operasional bengkel dikerjakan secara manual:
+
+| Masalah | Dampak |
+|---------|--------|
+| Pencatatan servis di buku/nota; data pemilik & kendaraan ditulis berulang tiap servis | Duplikasi data, tidak konsisten, rawan salah tulis |
+| Sparepart terpakai ditulis sekaligus dalam satu baris nota | Sulit menghitung total, melacak, dan merekap barang terpakai |
+| Stok sparepart tidak terpantau | Tidak diketahui sisa stok & stok minimal, sering kehabisan |
+| Pembayaran hanya dicatat "lunas/belum" | Tidak ada riwayat: metode, kasir, tanggal bayar |
+| Semua staf mengubah data tanpa pemisahan peran | Tidak ada audit siapa yang melayani/mengerjakan |
+
+**Tujuan rancangan ulang:**
+- Data tersimpan **terstruktur & bebas duplikasi** — tiap data disimpan sekali dan dirujuk lewat ID (hasil normalisasi).
+- **Alur kerja tercatat**: kasir mencatat servis → mekanik mengerjakan → kasir mencatat pembayaran, dengan **jejak siapa melayani**.
+- Pemantauan **stok & stok minimal** sparepart.
+- **Riwayat pembayaran lengkap** (metode, jumlah, kasir, tanggal); status lunas terhitung dari total terbayar.
+- **Pemisahan hak akses** (admin/kasir/mekanik) agar data aman dan mudah diaudit.
+
+### 1.2 Gambaran Umum
 
 Sistem Informasi Bengkel adalah aplikasi web untuk mengelola operasional bengkel kendaraan, meliputi:
 pendataan **pelanggan & kendaraan**, inventaris **sparepart (suku cadang)**, pencatatan **transaksi servis**,
 **pembayaran**, serta **laporan**. Aplikasi dipakai oleh tiga peran staf: *Admin, Kasir, dan Mekanik*.
 
-### 1.2 Aktor dan Hak Akses
+### 1.3 Aktor dan Hak Akses
 
 | No | Aktor | Peran | Hak Akses |
 |----|-------|-------|-----------|
@@ -32,7 +52,7 @@ pendataan **pelanggan & kendaraan**, inventaris **sparepart (suku cadang)**, pen
 | 3 | **Mekanik** | Teknisi bengkel | Melihat daftar pekerjaan yang ditugaskan kepadanya, memperbarui status pengerjaan hingga selesai |
 | 4 | **Pelanggan** | Konsumen (bukan akun login) | Memperoleh informasi status servis & tagihan dari staf |
 
-### 1.3 Kebutuhan Fungsional
+### 1.4 Kebutuhan Fungsional
 
 | Kode | Kebutuhan Fungsional | Aktor |
 |------|----------------------|-------|
@@ -48,7 +68,7 @@ pendataan **pelanggan & kendaraan**, inventaris **sparepart (suku cadang)**, pen
 | FR-10 | Sistem dapat mencatat pembayaran dan menandai servis lunas | Admin, Kasir |
 | FR-11 | Sistem dapat menampilkan laporan (pendapatan, stok sparepart, transaksi) | Admin |
 
-### 1.4 Kebutuhan Non-Fungsional
+### 1.5 Kebutuhan Non-Fungsional
 
 | Kode | Kebutuhan Non-Fungsional |
 |------|--------------------------|
@@ -214,7 +234,65 @@ flowchart LR
 
 ---
 
-## 3. Normalisasi
+## 3. Flowchart Proses Utama
+
+Alur proses utama aplikasi yang menggambarkan langkah-langkah aktor menjalankan sistem:
+
+### 3.1 Flowchart Login
+
+```mermaid
+flowchart TD
+    S([Mulai]) --> I[Input email & password]
+    I --> V{Data valid?}
+    V -- Tidak --> I
+    V -- Ya --> R{Tentukan peran}
+    R -- Admin --> A[/Dashboard admin/]
+    R -- Kasir --> B[/Dashboard kasir/]
+    R -- Mekanik --> C[/Dashboard mekanik/]
+    A --> E([Selesai])
+    B --> E
+    C --> E
+```
+
+### 3.2 Flowchart Transaksi Servis
+
+```mermaid
+flowchart TD
+    S([Mulai]) --> K[Kasir memilih kendaraan & menulis keluhan]
+    K --> P[Memilih mekanik & sparepart terpakai]
+    P --> H[Sistem menghitung total = biaya jasa + subtotal sparepart]
+    H --> R[Sistem mengurangi stok sparepart]
+    R --> T[Servis tersimpan, status = antre]
+    T --> M[Mekanik melihat daftar tugasnya]
+    M --> K1{Perbarui status pengerjaan}
+    K1 -- Proses --> P1[Status = proses]
+    P1 --> M
+    K1 -- Selesai --> L[Status = selesai]
+    K1 -- Batal --> B2[Status = batal]
+    L --> E([Selesai])
+    B2 --> E
+```
+
+### 3.3 Flowchart Pembayaran
+
+```mermaid
+flowchart TD
+    S([Mulai]) --> B[Kasir membuka transaksi servis]
+    B --> VJ{Ada sisa tagihan?}
+    VJ -- Tidak --> S2[Status lunas]
+    S2 --> N[Nota / tanda terima]
+    N --> E([Selesai])
+    VJ -- Ya --> J[Input jumlah bayar]
+    J --> VB{Jumlah bayar > sisa tagihan?}
+    VB -- Ya --> X[Input tidak valid]
+    X --> J
+    VB -- Tidak --> R[Sistem mencatat pembayaran]
+    R --> B
+```
+
+---
+
+## 4. Normalisasi
 
 > **Ringkasan cepat (sat-set):** alur "pecahnya tabel" dari data mentah sampai hasil akhir.
 
@@ -226,11 +304,11 @@ flowchart LR
 | 3NF | 8 | **pelanggans**, **kendaraans**, **kategoris**, **users**, **pembayarans**, **spareparts**, **servises**, **detail_servises** |
 
 > Proses berikut dikerjakan **tanpa contoh data** — murni menurunkan satu tabel berkolom banyak memakai aturan
-> ketergantungan fungsional (FD). Penjelasan detail setiap tahap ada di 3.1–3.5.
+> ketergantungan fungsional (FD). Penjelasan detail setiap tahap ada di 4.1–4.5.
 
 ---
 
-### 3.1 Satu Tabel Awal (UNF)
+### 4.1 Satu Tabel Awal (UNF)
 
 Sebelum sistem dibuat, kasir/admin mencatat servis **secara manual di buku** — bentuknya catatan mentah
 (**UNF**), bukan tabel:
@@ -273,7 +351,7 @@ Dari catatan mentah semacam itu, seluruh kolom yang dibutuhkan aplikasi diabstra
 > (1NF); anomali yang dibahas selanjutnya berada di tingkat 2NF dan 3NF, sehingga proses menurun berikut cukup
 > berbasis ketergantungan fungsional (FD) tanpa menampilkan baris data.
 
-### 3.2 Ketergantungan Fungsional (FD) dan Kunci Kandidat
+### 4.2 Ketergantungan Fungsional (FD) dan Kunci Kandidat
 
 Ketergantungan fungsional adalah aturan: *"jika nilai atribut X diketahui, nilai atribut Y menjadi pasti"*.
 FD di bawah ini didefinisikan dari aturan bisnis, bukan dari melihat baris data:
@@ -290,7 +368,7 @@ FD di bawah ini didefinisikan dari aturan bisnis, bukan dari melihat baris data:
 **Kunci kandidat** R: `(Kode_Servis, Kode_Barang)` — kombinasi ini yang dapat menentukan seluruh atribut lain
 melalui FD-1, FD-2, dan FD-3.
 
-### 3.3 Bentuk Normal Kedua (2NF)
+### 4.3 Bentuk Normal Kedua (2NF)
 
 2NF menghilangkan **ketergantungan parsial**: atribut yang bergantung hanya pada *sebagian* kunci (bukan kunci
 penuh) dipisah ke relasi sendiri. Dari FD-1 dan FD-2 terlihat anomali parsial, sehingga R dipecah menjadi **3
@@ -332,7 +410,7 @@ relasi**:
 
 Kunci gabungan `(Kode_Servis, Kode_Barang)` kini hanya tersisa di `Detail_Servises`.
 
-### 3.4 Bentuk Normal Ketiga (3NF)
+### 4.4 Bentuk Normal Ketiga (3NF)
 
 3NF menghilangkan **ketergantungan transitif**: atribut bukan-kunci yang bergantung pada atribut bukan-kunci lain
 dipisah menjadi entitas mandiri. Melalui FD-4 sampai FD-6, anomali transitif dipecah sehingga diperoleh **8
@@ -417,16 +495,16 @@ Keputusan saat 3NF:
 - `Kategori` → **Kategoris** (dirujuk sebagai `Kategori_ID`).
 - `Status_Pembayaran` (Lunas/Belum) → **Pembayarans**, karena satu servis dapat dibayar beberapa kali.
 
-### 3.5 Hasil Akhir
+### 4.5 Hasil Akhir
 
 Desain **memenuhi 3NF** dan menghasilkan **8 entitas akhir**:
 `users`, `kategoris`, `spareparts`, `pelanggans`, `kendaraans`, `servises`, `detail_servises`, `pembayarans`.
-Lihat relasi antar-entitas pada [ERD (bab 4)](#4-entity-relationship-diagram-erd) dan definisi kolom lengkap
-pada [Tabel Normalisasi (bab 5)](#5-tabel-normalisasi-rancangan-final).
+Lihat relasi antar-entitas pada [ERD (bab 5)](#5-entity-relationship-diagram-erd) dan definisi kolom lengkap
+pada [Tabel Normalisasi (bab 6)](#6-tabel-normalisasi-rancangan-final).
 
 ---
 
-## 4. Entity Relationship Diagram (ERD)
+## 5. Entity Relationship Diagram (ERD)
 
 ```mermaid
 erDiagram
@@ -522,9 +600,9 @@ erDiagram
 
 ---
 
-## 5. Tabel Normalisasi (Rancangan Final)
+## 6. Tabel Normalisasi (Rancangan Final)
 
-### 5.1 users
+### 6.1 users
 
 | Kolom | Tipe | Kunci | Keterangan |
 |-------|------|-------|------------|
@@ -538,7 +616,7 @@ erDiagram
 | remember_token | VARCHAR | | Token "ingat saya" |
 | created_at / updated_at | TIMESTAMP | | Waktu rekam/ubah |
 
-### 5.2 kategoris
+### 6.2 kategoris
 
 | Kolom | Tipe | Kunci | Keterangan |
 |-------|------|-------|------------|
@@ -546,7 +624,7 @@ erDiagram
 | nama | VARCHAR | | Nama kategori sparepart (mis. Oli, Ban, Busi) |
 | created_at / updated_at | TIMESTAMP | | Waktu rekam/ubah |
 
-### 5.3 spareparts
+### 6.3 spareparts
 
 | Kolom | Tipe | Kunci | Keterangan |
 |-------|------|-------|------------|
@@ -560,7 +638,7 @@ erDiagram
 | stok_minimal | INT | | Batas stok minim (untuk peringatan) |
 | created_at / updated_at | TIMESTAMP | | Waktu rekam/ubah |
 
-### 5.4 pelanggans
+### 6.4 pelanggans
 
 | Kolom | Tipe | Kunci | Keterangan |
 |-------|------|-------|------------|
@@ -570,7 +648,7 @@ erDiagram
 | alamat | TEXT | | Alamat |
 | created_at / updated_at | TIMESTAMP | | Waktu rekam/ubah |
 
-### 5.5 kendaraans
+### 6.5 kendaraans
 
 | Kolom | Tipe | Kunci | Keterangan |
 |-------|------|-------|------------|
@@ -581,7 +659,7 @@ erDiagram
 | tipe | VARCHAR | | Tipe (Vario 150, NMAX, Avanza) |
 | created_at / updated_at | TIMESTAMP | | Waktu rekam/ubah |
 
-### 5.6 servises
+### 6.6 servises
 
 | Kolom | Tipe | Kunci | Keterangan |
 |-------|------|-------|------------|
@@ -595,7 +673,7 @@ erDiagram
 | status | ENUM | | `antre`, `proses`, `selesai`, `batal` |
 | created_at / updated_at | TIMESTAMP | | Waktu rekam/ubah |
 
-### 5.7 detail_servises
+### 6.7 detail_servises
 
 | Kolom | Tipe | Kunci | Keterangan |
 |-------|------|-------|------------|
@@ -607,7 +685,7 @@ erDiagram
 | subtotal | DECIMAL(12,2) | | Jumlah × harga satuan |
 | created_at / updated_at | TIMESTAMP | | Waktu rekam/ubah |
 
-### 5.8 pembayarans
+### 6.8 pembayarans
 
 | Kolom | Tipe | Kunci | Keterangan |
 |-------|------|-------|------------|
@@ -621,7 +699,7 @@ erDiagram
 
 ---
 
-## 6. Ringkasan Relasi
+## 7. Ringkasan Relasi
 
 | Induk | Relasi | Anak | Tipe |
 |-------|--------|------|------|
@@ -636,7 +714,7 @@ erDiagram
 
 ---
 
-## 7. Catatan Implementasi
+## 8. Catatan Implementasi
 
 Desain di atas telah **diimplementasikan pada kode** (migrasi, model, controller, view, dan test). Berikut perubahan dari implementasi lama ke baru:
 
