@@ -233,13 +233,27 @@ flowchart LR
 ### 3.1 Satu Tabel Awal (UNF)
 
 Normalisasi dimulai dari **satu relasi** (R) yang berisi semua atribut (kolom) yang dibutuhkan aplikasi, digabung
-menjadi satu tabel:
+menjadi satu tabel — atribut `R`:
 
-```
-R( Kode_Servis, Tanggal, Kode_Barang, Kategori, Nama_Barang, Harga_Jual,
-   Jumlah, Subtotal, Plat_Nomor, Merk, Tipe, Nama_Pemilik, No_HP, Alamat,
-   Nama_Mekanik, Biaya_Jasa, Status_Pembayaran )
-```
+| Kolom |
+|-------|
+| Kode_Servis |
+| Tanggal |
+| Kode_Barang |
+| Kategori |
+| Nama_Barang |
+| Harga_Jual |
+| Jumlah |
+| Subtotal |
+| Plat_Nomor |
+| Merk |
+| Tipe |
+| Nama_Pemilik |
+| No_HP |
+| Alamat |
+| Nama_Mekanik |
+| Biaya_Jasa |
+| Status_Pembayaran |
 
 > Seluruh atribut sudah **atomik** (satu nilai, tidak ada kelompok berulang), sehingga secara definisi R sudah
 > memenuhi **1NF**. Anomali yang tersisa justru berada di tingkat 2NF dan 3NF. Proses menurun berikut **tidak
@@ -268,12 +282,39 @@ melalui FD-1, FD-2, dan FD-3.
 penuh) dipisah ke relasi sendiri. Dari FD-1 dan FD-2 terlihat anomali parsial, sehingga R dipecah menjadi **3
 relasi**:
 
-```
-Spareparts(      Kode_Barang [PK], Kategori, Nama_Barang, Harga_Jual )        ← dari FD-1
-Servises(        Kode_Servis [PK], Tanggal, Nama_Pemilik, No_HP, Alamat,      ← dari FD-2
-                 Plat_Nomor, Merk, Tipe, Nama_Mekanik, Biaya_Jasa, Status_Pembayaran )
-Detail_Servises( Kode_Servis [FK], Kode_Barang [FK], Jumlah, Subtotal )       ← dari FD-3 (kunci penuh)
-```
+**Spareparts** — *dari FD-1*:
+
+| Kolom | Kunci |
+|-------|-------|
+| Kode_Barang | PK |
+| Kategori | |
+| Nama_Barang | |
+| Harga_Jual | |
+
+**Servises** — *dari FD-2*:
+
+| Kolom | Kunci |
+|-------|-------|
+| Kode_Servis | PK |
+| Tanggal | |
+| Nama_Pemilik | |
+| No_HP | |
+| Alamat | |
+| Plat_Nomor | |
+| Merk | |
+| Tipe | |
+| Nama_Mekanik | |
+| Biaya_Jasa | |
+| Status_Pembayaran | |
+
+**Detail_Servises** — *dari FD-3 (kunci penuh)*:
+
+| Kolom | Kunci |
+|-------|-------|
+| Kode_Servis | FK |
+| Kode_Barang | FK |
+| Jumlah | |
+| Subtotal | |
 
 Kunci gabungan `(Kode_Servis, Kode_Barang)` kini hanya tersisa di `Detail_Servises`.
 
@@ -283,17 +324,78 @@ Kunci gabungan `(Kode_Servis, Kode_Barang)` kini hanya tersisa di `Detail_Servis
 dipisah menjadi entitas mandiri. Melalui FD-4 sampai FD-6, anomali transitif dipecah sehingga diperoleh **8
 relasi**:
 
-```
-Users(           User_ID [PK], Nama, Role )
-Kategoris(       Kategori_ID [PK], Nama )
-Pelanggans(      Pelanggan_ID [PK], Nama, No_HP, Alamat )
-Kendaraans(      Kendaraan_ID [PK], Pelanggan_ID [FK], Plat_Nomor, Merk, Tipe )
-Spareparts(      Kode_Barang [PK], Kategori_ID [FK], Nama_Barang, Harga_Jual )
-Servises(        Kode_Servis [PK], Kendaraan_ID [FK], Mekanik_ID [FK], Tanggal,
-                 Biaya_Jasa, Status_Pengerjaan )
-Detail_Servises( Kode_Servis [FK], Kode_Barang [FK], Jumlah, Subtotal )
-Pembayarans(     Pembayaran_ID [PK], Kode_Servis [FK], Jumlah_Bayar, Metode, Dibayar_Pada )
-```
+**Users**:
+
+| Kolom | Kunci |
+|-------|-------|
+| User_ID | PK |
+| Nama | |
+| Role | |
+
+**Kategoris**:
+
+| Kolom | Kunci |
+|-------|-------|
+| Kategori_ID | PK |
+| Nama | |
+
+**Pelanggans**:
+
+| Kolom | Kunci |
+|-------|-------|
+| Pelanggan_ID | PK |
+| Nama | |
+| No_HP | |
+| Alamat | |
+
+**Kendaraans**:
+
+| Kolom | Kunci |
+|-------|-------|
+| Kendaraan_ID | PK |
+| Pelanggan_ID | FK |
+| Plat_Nomor | |
+| Merk | |
+| Tipe | |
+
+**Spareparts**:
+
+| Kolom | Kunci |
+|-------|-------|
+| Kode_Barang | PK |
+| Kategori_ID | FK |
+| Nama_Barang | |
+| Harga_Jual | |
+
+**Servises**:
+
+| Kolom | Kunci |
+|-------|-------|
+| Kode_Servis | PK |
+| Kendaraan_ID | FK |
+| Mekanik_ID | FK |
+| Tanggal | |
+| Biaya_Jasa | |
+| Status_Pengerjaan | |
+
+**Detail_Servises**:
+
+| Kolom | Kunci |
+|-------|-------|
+| Kode_Servis | FK |
+| Kode_Barang | FK |
+| Jumlah | |
+| Subtotal | |
+
+**Pembayarans**:
+
+| Kolom | Kunci |
+|-------|-------|
+| Pembayaran_ID | PK |
+| Kode_Servis | FK |
+| Jumlah_Bayar | |
+| Metode | |
+| Dibayar_Pada | |
 
 Keputusan saat 3NF:
 - `Nama_Pemilik`, `No_HP`, `Alamat` ikut `Plat_Nomor` (FD-4) → **Pelanggans**; kendaraan menunjuk pelanggan via ID.
