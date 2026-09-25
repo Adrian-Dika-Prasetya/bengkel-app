@@ -60,6 +60,12 @@ class KendaraanController extends Controller
 
     public function destroy(Kendaraan $kendaraan)
     {
+        if ($kendaraan->servises()->exists()) {
+            return redirect()->route('kendaraans.index')->withErrors([
+                'kendaraan' => "Kendaraan '{$kendaraan->plat_nomor}' memiliki riwayat servis, tidak dapat dihapus.",
+            ]);
+        }
+
         $kendaraan->delete();
 
         return redirect()->back()->with('success', 'Kendaraan berhasil dihapus!');

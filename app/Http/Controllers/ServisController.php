@@ -44,14 +44,24 @@ class ServisController extends Controller
             'keluhan' => 'required',
             'biaya_jasa' => 'required|numeric|min:0',
             'sparepart_ids' => 'nullable|array',
-            'sparepart_ids.*' => 'exists:spareparts,id',
             'jumlahs' => 'nullable|array',
             'jumlahs.*' => 'nullable|integer|min:1',
         ]);
 
+        // Saring baris sparepart kosong supaya servis tanpa sparepart tetap bisa dibuat
+        $items = [];
+        foreach ($request->input('sparepart_ids', []) as $index => $id) {
+            $id = trim((string) $id);
+            $jumlah = (int) ($request->input('jumlahs', [])[$index] ?? 0);
+
+            if ($id !== '' && $jumlah >= 1) {
+                $items[] = ['sparepart_id' => $id, 'jumlah' => $jumlah];
+            }
+        }
+
         try {
             // Gunakan DB Transaction agar jika ada error, database tidak rusak
-            DB::transaction(function () use ($request) {
+            DB::transaction(function () use ($request, $items) {
                 // 1. Simpan Header Transaksi Servis
                 $servis = Servis::create([
                     'kode_transaksi' => 'SRV-'.now()->format('YmdHis').'-'.Str::upper(Str::random(4)),
@@ -64,39 +74,46 @@ class ServisController extends Controller
                 ]);
 
                 $totalSparepart = 0;
+                $dipakai = [];
 
                 // 2. Simpan Detail Sparepart yang Dipakai (jika ada)
-                if ($request->has('sparepart_ids')) {
-                    foreach ($request->sparepart_ids as $index => $sparepartId) {
-                        $jumlah = (int) ($request->jumlahs[$index] ?? 0);
+                foreach ($items as $item) {
+                    $sparepart = Sparepart::find($item['sparepart_id']);
 
-                        if ($jumlah < 1) {
-                            continue;
-                        }
-
-                        $sparepart = Sparepart::findOrFail($sparepartId);
-
-                        // Cegah stok melebihi ketersediaan
-                        if ($jumlah > $sparepart->stok) {
-                            throw ValidationException::withMessages([
-                                'sparepart_ids' => "Stok {$sparepart->nama_barang} hanya tersisa {$sparepart->stok} pcs.",
-                            ]);
-                        }
-
-                        $subtotal = $sparepart->harga_jual * $jumlah;
-                        $totalSparepart += $subtotal;
-
-                        DetailServis::create([
-                            'servis_id' => $servis->id,
-                            'sparepart_id' => $sparepartId,
-                            'jumlah' => $jumlah,
-                            'harga_satuan' => $sparepart->harga_jual,
-                            'subtotal' => $subtotal,
+                    if (! $sparepart) {
+                        throw ValidationException::withMessages([
+                            'sparepart_ids' => 'Sparepart yang dipilih tidak ditemukan.',
                         ]);
-
-                        // 3. Potong Stok Sparepart Otomatis
-                        $sparepart->decrement('stok', $jumlah);
                     }
+
+                    // Satu sparepart tidak boleh dipilih di lebih dari satu baris
+                    if (isset($dipakai[$sparepart->id])) {
+                        throw ValidationException::withMessages([
+                            'sparepart_ids' => 'Sparepart yang sama tidak boleh dipilih dua kali.',
+                        ]);
+                    }
+                    $dipakai[$sparepart->id] = true;
+
+                    // Cegah stok melebihi ketersediaan
+                    if ($item['jumlah'] > $sparepart->stok) {
+                        throw ValidationException::withMessages([
+                            'sparepart_ids' => "Stok {$sparepart->nama_barang} hanya tersisa {$sparepart->stok} pcs.",
+                        ]);
+                    }
+
+                    $subtotal = $sparepart->harga_jual * $item['jumlah'];
+                    $totalSparepart += $subtotal;
+
+                    DetailServis::create([
+                        'servis_id' => $servis->id,
+                        'sparepart_id' => $sparepart->id,
+                        'jumlah' => $item['jumlah'],
+                        'harga_satuan' => $sparepart->harga_jual,
+                        'subtotal' => $subtotal,
+                    ]);
+
+                    // 3. Potong Stok Sparepart Otomatis
+                    $sparepart->decrement('stok', $item['jumlah']);
                 }
 
                 // 4. Update Total Bayar (Biaya Jasa + Total Sparepart)
@@ -113,6 +130,10 @@ class ServisController extends Controller
 
     public function show(Request $request, Servis $servis)
     {
+        if ($request->user()->isMekanik() && $servis->mekanik_id !== $request->user()->id) {
+            abort(403);
+        }
+
         $servis->load(['kendaraan.pelanggan', 'mekanik', 'detailServises.sparepart', 'pembayarans.kasir']);
 
         return view('servises.show', compact('servis'));
@@ -142,6 +163,11 @@ class ServisController extends Controller
             if ($servis->mekanik_id !== $request->user()->id || $request->status !== 'selesai') {
                 abort(403);
             }
+        }
+
+        // Servis yang sudah dibayar tidak boleh dibatalkan (uang telah diterima)
+        if ($request->status === 'batal' && $servis->pembayarans()->exists()) {
+            return back()->withErrors(['status' => 'Tidak dapat membatalkan servis yang sudah memiliki pembayaran.']);
         }
 
         $servis->update(['status' => $request->status]);

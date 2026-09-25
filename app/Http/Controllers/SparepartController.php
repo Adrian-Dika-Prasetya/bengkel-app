@@ -79,8 +79,14 @@ class SparepartController extends Controller
 
     public function destroy(Sparepart $sparepart)
     {
+        if ($sparepart->detailServises()->exists()) {
+            return redirect()->route('spareparts.index')->withErrors([
+                'sparepart' => "Sparepart '{$sparepart->nama_barang}' pernah dipakai dalam transaksi servis, tidak dapat dihapus.",
+            ]);
+        }
+
         $sparepart->delete();
 
-        return redirect()->back()->with('success', 'Sparepart berhasil dihapus!');
+        return redirect()->route('spareparts.index')->with('success', 'Sparepart berhasil dihapus!');
     }
 }

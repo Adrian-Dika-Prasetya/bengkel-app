@@ -12,6 +12,12 @@ class PembayaranController extends Controller
 {
     public function store(Request $request, Servis $servis)
     {
+        if ($servis->status === 'batal') {
+            throw ValidationException::withMessages([
+                'pembayaran' => 'Transaksi dibatalkan, tidak dapat menerima pembayaran.',
+            ]);
+        }
+
         $request->validate([
             'jumlah_bayar' => 'required|numeric|min:1',
             'metode' => ['required', Rule::in(['tunai', 'transfer', 'qris'])],
@@ -38,6 +44,10 @@ class PembayaranController extends Controller
 
     public function lunasi(Request $request, Servis $servis)
     {
+        if ($servis->status === 'batal') {
+            return back()->withErrors(['pembayaran' => 'Transaksi dibatalkan, tidak dapat menerima pembayaran.']);
+        }
+
         $sisa = $servis->total_bayar - $servis->totalDibayar;
 
         if ($sisa <= 0) {

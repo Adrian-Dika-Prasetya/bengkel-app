@@ -37,6 +37,10 @@ class Servis extends Model
     // Total uang yang sudah dibayar pelanggan
     public function getTotalDibayarAttribute(): int
     {
+        if ($this->relationLoaded('pembayarans')) {
+            return (int) $this->pembayarans->sum('jumlah_bayar');
+        }
+
         return (int) $this->pembayarans()->sum('jumlah_bayar');
     }
 

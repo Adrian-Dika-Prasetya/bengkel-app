@@ -53,6 +53,7 @@ class DashboardController extends Controller
     private function tagihanBelumLunas(): int
     {
         return (int) Servis::where('total_bayar', '>', 0)
+            ->where('status', '!=', 'batal')
             ->whereRaw(
                 'COALESCE((SELECT SUM(jumlah_bayar) FROM pembayarans WHERE pembayarans.servis_id = servises.id), 0) < servises.total_bayar'
             )

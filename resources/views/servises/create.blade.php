@@ -79,8 +79,39 @@
                         <div>
                             <input type="number" name="jumlahs[]" placeholder="Jumlah" min="1" class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-orange-400 focus:ring-orange-400">
                         </div>
+                        <div class="flex items-center gap-2">
+                            <button type="button" class="btn-remove-sparepart rounded-lg px-3 py-2 text-xs font-semibold text-red-600 hover:bg-red-50">Hapus</button>
+                        </div>
                     </div>
                 </div>
+
+                <button type="button" id="btn-add-sparepart" class="mt-2 inline-flex items-center gap-2 rounded-lg border border-gray-300 px-4 py-2 text-sm font-semibold text-gray-700 transition hover:bg-gray-50">
+                    + Tambah Baris Sparepart
+                </button>
+
+                <script>
+                    (function () {
+                        var container = document.getElementById('sparepart-container');
+                        var addButton = document.getElementById('btn-add-sparepart');
+
+                        addButton.addEventListener('click', function () {
+                            var firstRow = container.querySelector('.sparepart-row');
+                            var clone = firstRow.cloneNode(true);
+                            clone.querySelector('select[name="sparepart_ids[]"]').value = '';
+                            clone.querySelector('input[name="jumlahs[]"]').value = '';
+                            container.appendChild(clone);
+                        });
+
+                        container.addEventListener('click', function (event) {
+                            if (event.target.classList.contains('btn-remove-sparepart')) {
+                                var rows = container.querySelectorAll('.sparepart-row');
+                                if (rows.length > 1) {
+                                    event.target.closest('.sparepart-row').remove();
+                                }
+                            }
+                        });
+                    })();
+                </script>
 
                 <div class="mt-6 flex items-center gap-3">
                     <button type="submit" class="inline-flex items-center gap-2 rounded-lg bg-orange-500 px-6 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-orange-600">
