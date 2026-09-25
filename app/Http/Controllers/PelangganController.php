@@ -7,6 +7,11 @@ use Illuminate\Http\Request;
 
 class PelangganController extends Controller
 {
+    public function create()
+    {
+        return view('pelanggans.create');
+    }
+
     public function store(Request $request)
     {
         $request->validate([
@@ -17,7 +22,7 @@ class PelangganController extends Controller
 
         Pelanggan::create($request->only(['nama', 'no_hp', 'alamat']));
 
-        return redirect()->back()->with('success', 'Pelanggan berhasil ditambahkan!');
+        return redirect()->route('kendaraans.index')->with('success', 'Pelanggan berhasil ditambahkan!');
     }
 
     public function destroy(Pelanggan $pelanggan)

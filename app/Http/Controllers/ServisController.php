@@ -118,6 +118,17 @@ class ServisController extends Controller
         return view('servises.show', compact('servis'));
     }
 
+    public function nota(Request $request, Servis $servis)
+    {
+        if ($request->user()->isMekanik()) {
+            abort(403);
+        }
+
+        $servis->load(['kendaraan.pelanggan', 'mekanik', 'detailServises.sparepart', 'pembayarans.kasir']);
+
+        return view('servises.nota', compact('servis'));
+    }
+
     public function updateStatus(Request $request, Servis $servis)
     {
         $allowedStatuses = ['antre', 'proses', 'selesai', 'batal'];

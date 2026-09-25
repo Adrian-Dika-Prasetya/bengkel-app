@@ -11,9 +11,15 @@ class SparepartController extends Controller
     public function index()
     {
         $spareparts = Sparepart::with('kategori')->latest()->get();
+
+        return view('spareparts.index', compact('spareparts'));
+    }
+
+    public function create()
+    {
         $kategoris = Kategori::orderBy('nama')->get();
 
-        return view('spareparts.index', compact('spareparts', 'kategoris'));
+        return view('spareparts.create', compact('kategoris'));
     }
 
     public function store(Request $request)
@@ -38,7 +44,14 @@ class SparepartController extends Controller
             'stok_minimal',
         ]));
 
-        return redirect()->back()->with('success', 'Sparepart berhasil ditambahkan!');
+        return redirect()->route('spareparts.index')->with('success', 'Sparepart berhasil ditambahkan!');
+    }
+
+    public function edit(Sparepart $sparepart)
+    {
+        $kategoris = Kategori::orderBy('nama')->get();
+
+        return view('spareparts.edit', compact('sparepart', 'kategoris'));
     }
 
     public function update(Request $request, Sparepart $sparepart)
@@ -61,7 +74,7 @@ class SparepartController extends Controller
             'stok_minimal',
         ]));
 
-        return redirect()->back()->with('success', 'Sparepart berhasil diperbarui!');
+        return redirect()->route('spareparts.index')->with('success', 'Sparepart berhasil diperbarui!');
     }
 
     public function destroy(Sparepart $sparepart)

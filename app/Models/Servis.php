@@ -40,9 +40,10 @@ class Servis extends Model
         return (int) $this->pembayarans()->sum('jumlah_bayar');
     }
 
-    // Status pelunasan dihitung dari total pembayaran, bukan kolom status
+    // Status pelunasan dihitung dari total pembayaran, bukan kolom status.
+    // Tagihan 0 (jasa & sparepart kosong) otomatis dianggap lunas.
     public function getLunasAttribute(): bool
     {
-        return $this->total_bayar > 0 && $this->totalDibayar >= $this->total_bayar;
+        return $this->totalDibayar >= $this->total_bayar;
     }
 }

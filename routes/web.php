@@ -32,6 +32,7 @@ Route::middleware('auth')->group(function () {
 
     // 5. Data Pelanggan & Kendaraan: Admin & Kasir
     Route::middleware('role:admin,kasir')->group(function () {
+        Route::get('pelanggans/create', [PelangganController::class, 'create'])->name('pelanggans.create');
         Route::post('pelanggans', [PelangganController::class, 'store'])->name('pelanggans.store');
         Route::delete('pelanggans/{pelanggan}', [PelangganController::class, 'destroy'])->name('pelanggans.destroy');
         Route::resource('kendaraans', KendaraanController::class);
@@ -52,9 +53,15 @@ Route::middleware('auth')->group(function () {
     Route::get('servises/{servis}', [ServisController::class, 'show'])
         ->middleware('role:admin,kasir,mekanik')
         ->name('servises.show');
+    Route::get('servises/{servis}/nota', [ServisController::class, 'nota'])
+        ->middleware('role:admin,kasir')
+        ->name('servises.nota');
     Route::patch('servises/{servis}/status', [ServisController::class, 'updateStatus'])
         ->middleware('role:admin,kasir,mekanik')
         ->name('servises.status');
+    Route::post('servises/{servis}/lunasi', [PembayaranController::class, 'lunasi'])
+        ->middleware('role:admin,kasir')
+        ->name('servises.lunasi');
     Route::post('servises/{servis}/pembayaran', [PembayaranController::class, 'store'])
         ->middleware('role:admin,kasir')
         ->name('servises.pembayaran');

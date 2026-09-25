@@ -8,7 +8,7 @@
             </svg>
         </div>
         <div class="leading-tight">
-            <div class="text-sm font-bold tracking-wide text-white">BENGKEL ADRIAN</div>
+<div class="text-sm font-bold tracking-wide text-white">BENGKEL ADRIAN</div>
             <div class="text-[11px] text-slate-400">Kelola servis &amp; inventaris</div>
         </div>
     </div>

@@ -35,4 +35,23 @@ class PembayaranController extends Controller
 
         return redirect()->back()->with('success', 'Pembayaran berhasil dicatat!');
     }
+
+    public function lunasi(Request $request, Servis $servis)
+    {
+        $sisa = $servis->total_bayar - $servis->totalDibayar;
+
+        if ($sisa <= 0) {
+            return redirect()->back()->with('success', 'Transaksi ini sudah lunas.');
+        }
+
+        Pembayaran::create([
+            'servis_id' => $servis->id,
+            'kasir_id' => $request->user()->id,
+            'jumlah_bayar' => $sisa,
+            'metode' => 'tunai',
+            'dibayar_pada' => now(),
+        ]);
+
+        return redirect()->back()->with('success', 'Transaksi ditandai lunas!');
+    }
 }

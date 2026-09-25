@@ -69,14 +69,25 @@
                                     @if($item->lunas)
                                         <span class="inline-flex items-center rounded-full bg-green-50 px-2.5 py-0.5 text-xs font-semibold text-green-700">LUNAS</span>
                                     @else
-                                        <span class="inline-flex items-center rounded-full bg-orange-50 px-2.5 py-0.5 text-xs font-semibold text-orange-700">
+                                        <div class="inline-flex items-center gap-1 rounded-full bg-orange-50 px-2.5 py-0.5 text-xs font-semibold text-orange-700">
                                             SISA Rp {{ number_format($item->total_bayar - $item->totalDibayar) }}
-                                        </span>
+                                        </div>
+                                        @if(Auth::user()->isAdmin() || Auth::user()->isKasir())
+                                            <form action="{{ route('servises.lunasi', $item) }}" method="POST" class="mt-1">
+                                                @csrf
+                                                <button type="submit" onclick="return confirm('Tandai transaksi {{ $item->kode_transaksi }} sebagai lunas?')" class="text-xs font-semibold text-orange-600 hover:underline">
+                                                    Tandai Lunas
+                                                </button>
+                                            </form>
+                                        @endif
                                     @endif
                                 </td>
                                 <td class="whitespace-nowrap px-4 py-4">
                                     <div class="flex items-center gap-2">
                                         <a href="{{ route('servises.show', $item) }}" class="text-sm font-medium text-orange-600 hover:underline">Detail</a>
+                                        @if(Auth::user()->isAdmin() || Auth::user()->isKasir())
+                                            <a href="{{ route('servises.nota', $item) }}" class="text-sm font-medium text-orange-600 hover:underline">Nota</a>
+                                        @endif
                                         @if(
                                             Auth::user()->isAdmin() ||
                                             Auth::user()->isKasir() ||

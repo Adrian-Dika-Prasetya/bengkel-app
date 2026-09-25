@@ -16,6 +16,13 @@ class KendaraanController extends Controller
         return view('kendaraans.index', compact('kendaraans', 'pelanggans'));
     }
 
+    public function create()
+    {
+        $pelanggans = Pelanggan::orderBy('nama')->get();
+
+        return view('kendaraans.create', compact('pelanggans'));
+    }
+
     public function store(Request $request)
     {
         $request->validate([
@@ -27,7 +34,14 @@ class KendaraanController extends Controller
 
         Kendaraan::create($request->only(['pelanggan_id', 'plat_nomor', 'merk', 'tipe']));
 
-        return redirect()->back()->with('success', 'Kendaraan berhasil ditambahkan!');
+        return redirect()->route('kendaraans.index')->with('success', 'Kendaraan berhasil ditambahkan!');
+    }
+
+    public function edit(Kendaraan $kendaraan)
+    {
+        $pelanggans = Pelanggan::orderBy('nama')->get();
+
+        return view('kendaraans.edit', compact('kendaraan', 'pelanggans'));
     }
 
     public function update(Request $request, Kendaraan $kendaraan)
@@ -41,7 +55,7 @@ class KendaraanController extends Controller
 
         $kendaraan->update($request->only(['pelanggan_id', 'plat_nomor', 'merk', 'tipe']));
 
-        return redirect()->back()->with('success', 'Data kendaraan berhasil diperbarui!');
+        return redirect()->route('kendaraans.index')->with('success', 'Data kendaraan berhasil diperbarui!');
     }
 
     public function destroy(Kendaraan $kendaraan)
