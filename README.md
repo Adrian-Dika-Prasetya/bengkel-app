@@ -64,9 +64,10 @@ pendataan **pelanggan & kendaraan**, inventaris **sparepart (suku cadang)**, pen
 | FR-06 | Sistem dapat mencatat transaksi servis (kendaraan, keluhan, mekanik, spontan sparepart, biaya jasa) | Admin, Kasir |
 | FR-07 | Sistem dapat menghitung total bayar = biaya jasa + subtotal sparepart secara otomatis | Sistem |
 | FR-08 | Sistem dapat mengurangi stok sparepart otomatis saat sparepart dipakai | Sistem |
-| FR-09 | Sistem dapat memperbarui status pengerjaan servis (antre, proses, selesai) | Mekanik |
+| FR-09 | Sistem dapat memperbarui status pengerjaan servis (antre, proses, selesai, batal) | Mekanik |
 | FR-10 | Sistem dapat mencatat pembayaran dan menandai servis lunas | Admin, Kasir |
 | FR-11 | Sistem dapat menampilkan laporan (pendapatan, stok sparepart, transaksi) | Admin |
+| FR-12 | Sistem dapat menampilkan & mencetak bukti transaksi (nota servis) | Admin, Kasir |
 
 ### 1.5 Kebutuhan Non-Fungsional
 
@@ -727,3 +728,8 @@ Desain di atas telah **diimplementasikan pada kode** (migrasi, model, controller
 | Riwayat pembayaran | hanya status `lunas` | tabel **pembayarans** (metode, kasir, tanggal) |
 | Status servis | `antre, proses, selesai, lunas` | `antre, proses, selesai, batal` + status pelunasan dari pembayarans |
 | Nomor telepon pengguna | tidak ada | ditambahkan kolom `no_telepon` di **users** |
+| Penambahan pelanggan/kendaraan/sparepart | form inline di halaman daftar | halaman tambah terpisah (`/spareparts/create`, `/kendaraans/create`, `/pelanggans/create`), tombol **Tambah** di kanan atas daftar |
+| Mengubah data | belum tersedia | halaman **edit** untuk sparepart & kendaraan (kode barang sparepart terkunci) |
+| Bukti transaksi | belum ada | halaman **nota** yang bisa **dicetak** (`/servises/{servis}/nota`): kop bengkel, rincian jasa & sparepart, riwayat pembayaran, status lunas |
+| Pelunasan tagihan | hanya lewat form jumlah bayar | tambahan tombol **Tandai Lunas** (admin/kasir) mencatat pembayaran sisa sekaligus |
+| Servis dengan total Rp 0 (jasa & sparepart kosong) | selamanya berstatus belum lunas | otomatis dianggap **lunas** (tidak ada yang perlu dibayar) |
